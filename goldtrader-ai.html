@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldTrader AI — XAU/USD</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Barlow+Condensed:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --gold: #D4AF37;
+    --gold-light: #F5D87A;
+    --gold-dark: #8B6914;
+    --green: #00D09C;
+    --red: #FF4757;
+    --bg: #090B0E;
+    --panel: #0E1117;
+    --panel2: #111620;
+    --border: #1A2030;
+    --text: #E8EAF0;
+    --muted: #5A6278;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.4;
+  }
+
+  mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* HEADER */
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900; color: #000;
+    box-shadow: 0 0 20px #D4AF3740;
+  }
+
+  .logo-text { font-size: 18px; font-weight: 900; letter-spacing: 0.12em; }
+  .logo-text span { color: var(--gold); }
+  .logo-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.12em; margin-top: 1px; }
+
+  .header-right { display: flex; align-items: center; gap: 8px; }
+
+  /* BADGE */
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+    display: inline-flex; align-items: center;
+  }
+  .badge-gold { background: #D4AF3720; border: 1px solid #D4AF3755; color: var(--gold); }
+  .badge-green { background: #00D09C18; border: 1px solid #00D09C44; color: var(--green); }
+  .badge-red { background: #FF475720; border: 1px solid #FF475755; color: var(--red); }
+  .badge-muted { background: var(--border); border: 1px solid #5A627833; color: var(--muted); }
+
+  /* MAIN LAYOUT */
+  .layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+  }
+
+  /* MAIN PANEL */
+  main {
+    padding: 20px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+  }
+
+  /* PRICE HERO */
+  .price-hero {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .price-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.14em; margin-bottom: 4px; }
+  .price-main { font-size: 58px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; }
+  .price-main .cents { font-size: 36px; color: var(--muted); }
+
+  .price-change { padding-bottom: 8px; }
+  .change-value { font-size: 24px; font-weight: 800; }
+  .change-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* TIMEFRAME */
+  .tf-bar { display: flex; gap: 4px; flex-wrap: wrap; padding-bottom: 8px; }
+  .tf-btn {
+    padding: 4px 10px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; cursor: pointer; transition: all 0.15s;
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+  }
+  .tf-btn:hover { border-color: #D4AF3755; color: var(--gold); }
+  .tf-btn.active { border-color: var(--gold); background: #D4AF3718; color: var(--gold); }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); gap: 0; }
+  .tab-btn {
+    padding: 10px 20px; border: none; background: none; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
+    color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* TAB CONTENT */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* CHART */
+  .chart-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+  }
+
+  /* AI CARD */
+  .ai-card {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 18px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .ai-signal { font-size: 38px; font-weight: 900; }
+  .ai-signal.BUY { color: var(--green); }
+  .ai-signal.SELL { color: var(--red); }
+  .ai-signal.WAIT { color: var(--gold); }
+
+  .ai-levels {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .ai-level {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+
+  .ai-level-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.1em; }
+  .ai-level-val { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; }
+
+  .ai-reasoning { font-size: 13px; color: var(--muted); line-height: 1.7; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; }
+
+  .ai-placeholder {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    text-align: center;
+  }
+
+  .ai-placeholder p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+
+  /* POSITIONS */
+  .position-card {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 10px;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .pos-info-main { font-size: 14px; font-weight: 700; }
+  .pos-info-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .pos-pnl { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 800; text-align: right; }
+  .pos-pnl-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); text-align: right; }
+
+  /* NEWS */
+  .news-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .news-card:hover { border-color: #D4AF3744; }
+  .news-meta { min-width: 48px; text-align: center; }
+  .news-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+  .news-source { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+  .news-title { font-size: 14px; font-weight: 600; line-height: 1.45; flex: 1; }
+
+  /* SIDEBAR */
+  aside {
+    background: var(--panel);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-section { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; }
+  .sidebar-section:last-child { border-bottom: none; }
+  .sidebar-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.15em; margin-bottom: 14px; text-transform: uppercase; }
+
+  /* BUY/SELL TOGGLE */
+  .bs-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    transition: all 0.2s; font-weight: 700;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #000; }
+  .btn-gold:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-green { background: linear-gradient(135deg, var(--green), #00A87A); color: #000; }
+  .btn-green:hover:not(:disabled) { filter: brightness(1.1); }
+  .btn-red { background: linear-gradient(135deg, var(--red), #CC2233); color: #fff; }
+  .btn-red:hover:not(:disabled) { filter: brightness(1.1); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: #D4AF3755; color: var(--gold); }
+  .btn-outline { background: transparent; border: 1px solid #D4AF3755; color: var(--gold); }
+  .btn-outline:hover { background: #D4AF3712; }
+  .btn-active-green { background: linear-gradient(135deg, var(--green), #00A87A); color: #000; font-size: 14px; }
+  .btn-active-red { background: linear-gradient(135deg, var(--red), #CC2233); color: #fff; font-size: 14px; }
+  .btn-inactive { background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+
+  /* FORM */
+  .form-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 5px; }
+  .form-group { margin-bottom: 12px; }
+
+  .form-input-wrap { position: relative; }
+  .form-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace; outline: none; transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: #D4AF3755; }
+  .form-input.has-suffix { padding-right: 36px; }
+  .input-suffix { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--gold); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+
+  .form-select {
+    width: 100%; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace; outline: none; cursor: pointer;
+  }
+
+  /* CALC BOX */
+  .calc-box { background: var(--bg); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .calc-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .calc-row:last-child { margin-bottom: 0; }
+  .calc-key { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+  .calc-val { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: var(--gold); }
+
+  /* STATS */
+  .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+  .stat-key { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+  .stat-val { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text); }
+
+  /* TRIAL BANNER */
+  .trial-banner {
+    background: linear-gradient(135deg, #8B691422, #D4AF3710);
+    border: 1px solid #D4AF3744;
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .trial-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+  .trial-text { font-size: 13px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+
+  /* PLANS SCREEN */
+  #plans-screen {
+    display: none;
+    padding: 32px 24px;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .plans-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
+
+  .plan-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .plan-card:hover { transform: translateY(-3px); }
+  .plan-card.featured { border-color: var(--gold); background: linear-gradient(160deg, var(--panel), #8B691415); }
+  .plan-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0; transition: opacity 0.2s; }
+  .plan-card:hover::before { opacity: 1; }
+
+  .plan-name { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 0.15em; margin-bottom: 8px; }
+  .plan-price { font-size: 52px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+  .plan-period { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .plan-feature { font-size: 14px; color: var(--text); margin-bottom: 8px; display: flex; gap: 8px; }
+  .plan-feature span { color: var(--green); }
+
+  /* FOOTER */
+  footer {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 8px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer p { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); }
+
+  /* LIVE DOT */
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .live-dot { animation: pulse 1.5s ease-in-out infinite; }
+
+  /* PRICE BLINK */
+  @keyframes priceBlink { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+  .price-updated { animation: priceBlink 0.3s ease; }
+
+  /* LOADING SPINNER */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #D4AF3733; border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { border-top: 1px solid var(--border); }
+    .ai-levels { grid-template-columns: repeat(2, 1fr); }
+    .plans-grid { grid-template-columns: 1fr; }
+    .price-main { font-size: 42px; }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .w-full { width: 100%; }
+  .mt-8 { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .flex { display: flex; }
+  .gap-8 { gap: 8px; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .text-center { text-align: center; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">G</div>
+    <div>
+      <div class="logo-text"><span>GOLD</span>TRADER AI</div>
+      <div class="logo-sub">XAU/USD · POWERED BY CLAUDE AI</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="badge badge-green live-dot" id="live-badge">● LIVE</span>
+    <span class="badge badge-gold" id="plan-badge">FREE TRIAL</span>
+    <span class="badge badge-muted" id="trial-badge">15J RESTANTS</span>
+    <button class="btn btn-outline" onclick="showPlans()" style="padding:5px 12px;font-size:10px;">PLANS ▸</button>
+  </div>
+</header>
+
+<!-- ═══ PLANS SCREEN ═══ -->
+<div id="plans-screen">
+  <button class="btn btn-ghost" onclick="hidePlans()" style="margin-bottom:24px;font-size:11px;">← RETOUR AU DASHBOARD</button>
+  <h1 style="font-size:44px;font-weight:900;letter-spacing:0.05em;">CHOISISSEZ VOTRE <span style="color:var(--gold)">PLAN</span></h1>
+  <p style="color:var(--muted);font-size:16px;margin-top:8px;">15 jours d'essai gratuit — aucune carte bancaire requise.</p>
+  <div class="plans-grid">
+    <div class="plan-card" onclick="selectPlan('free')">
+      <div class="plan-name">FREE TRIAL</div>
+      <div class="plan-price">FREE</div>
+      <div class="plan-period" style="color:var(--gold-light);font-family:'IBM Plex Mono',monospace;font-size:11px;">15 JOURS GRATUITS</div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;">
+        <div class="plan-feature"><span>✓</span> Analyse basique XAU/USD</div>
+        <div class="plan-feature"><span>✓</span> 1 signal IA / jour</div>
+        <div class="plan-feature"><span>✓</span> Timeframe M30 seulement</div>
+      </div>
+      <button class="btn btn-outline w-full mt-12" id="plan-btn-free">PLAN ACTUEL</button>
+    </div>
+    <div class="plan-card" onclick="selectPlan('basic')">
+      <div class="plan-name">BASIC</div>
+      <div class="plan-price">$29</div>
+      <div class="plan-period">/mois</div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;">
+        <div class="plan-feature"><span>✓</span> Toutes les timeframes</div>
+        <div class="plan-feature"><span>✓</span> Alertes illimitées</div>
+        <div class="plan-feature"><span>✓</span> Actualités en temps réel</div>
+        <div class="plan-feature"><span>✓</span> Signaux IA illimités</div>
+      </div>
+      <button class="btn btn-outline w-full mt-12" id="plan-btn-basic">CHOISIR</button>
+    </div>
+    <div class="plan-card featured" onclick="selectPlan('pro')">
+      <div style="position:absolute;top:14px;right:14px;" class="badge badge-gold">⭐ POPULAIRE</div>
+      <div class="plan-name">PRO</div>
+      <div class="plan-price">$79</div>
+      <div class="plan-period">/mois</div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;">
+        <div class="plan-feature"><span>✓</span> Tout Basic inclus</div>
+        <div class="plan-feature"><span>✓</span> Analyse IA avancée</div>
+        <div class="plan-feature"><span>✓</span> Gestion portefeuille</div>
+        <div class="plan-feature"><span>✓</span> Accès API développeur</div>
+        <div class="plan-feature"><span>✓</span> Support prioritaire</div>
+      </div>
+      <button class="btn btn-gold w-full mt-12" id="plan-btn-pro">CHOISIR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard" class="layout">
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- PRICE HERO -->
+    <div class="price-hero">
+      <div>
+        <div class="price-label">XAU / USD — OR / DOLLAR</div>
+        <div class="price-main" id="price-display">
+          $<span id="price-int">2340</span><span class="cents">.<span id="price-dec">00</span></span>
+        </div>
+      </div>
+      <div class="price-change">
+        <div class="change-value" id="change-display" style="color:var(--green)">+0.00 (+0.00%)</div>
+        <div class="change-sub">VARIATION SESSION · <span id="current-tf">M30</span></div>
+      </div>
+      <div class="tf-bar" id="tf-bar">
+        <!-- Injecté par JS -->
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('chart',this)">📈 GRAPHIQUE</button>
+      <button class="tab-btn" onclick="switchTab('positions',this)">💼 POSITIONS (<span id="pos-count">2</span>)</button>
+      <button class="tab-btn" onclick="switchTab('news',this)">📰 ACTUALITÉS</button>
+    </div>
+
+    <!-- TAB: CHART -->
+    <div class="tab-content active" id="tab-chart">
+      <div class="chart-wrap">
+        <canvas id="priceChart" height="280"></canvas>
+      </div>
+
+      <!-- AI ZONE -->
+      <div id="ai-zone" style="margin-top:14px;">
+        <div class="ai-placeholder" id="ai-placeholder">
+          <p>Obtenez une analyse IA complète : signal, niveaux d'entrée, stop loss et take profit basés sur le prix actuel et les actualités du marché.</p>
+          <div id="ai-error" style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:12px;display:none;"></div>
+          <button class="btn btn-gold" id="btn-analyze" onclick="runAIAnalysis()">🤖 ANALYSER AVEC L'IA CLAUDE</button>
+        </div>
+        <div class="ai-card hidden" id="ai-result">
+          <!-- Injecté par JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: POSITIONS -->
+    <div class="tab-content" id="tab-positions">
+      <div class="flex justify-between items-center" style="margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:700;color:var(--muted);font-family:'IBM Plex Mono',monospace;">POSITIONS OUVERTES</div>
+        <span class="badge badge-green" id="total-pnl-badge">P&L TOTAL: +$51.40</span>
+      </div>
+      <div id="positions-list">
+        <!-- Injecté par JS -->
+      </div>
+    </div>
+
+    <!-- TAB: NEWS -->
+    <div class="tab-content" id="tab-news">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:0.1em;">
+        FLUX ACTUALITÉS XAU/USD — ANALYSE DE SENTIMENT EN TEMPS RÉEL
+      </div>
+      <div id="news-list">
+        <!-- Injecté par JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── SIDEBAR ── -->
+  <aside>
+
+    <!-- ORDRE -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">📋 PASSER UN ORDRE</div>
+
+      <div class="bs-toggle">
+        <button class="btn btn-active-green w-full" id="btn-buy" onclick="setBuySell('BUY')">▲ BUY</button>
+        <button class="btn btn-inactive w-full" id="btn-sell" onclick="setBuySell('SELL')">▼ SELL</button>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Levier</div>
+        <select class="form-select" id="leverage-select" onchange="updateCalc()">
+          <option value="1">1:1</option>
+          <option value="10">1:10</option>
+          <option value="20">1:20</option>
+          <option value="50">1:50</option>
+          <option value="100" selected>1:100</option>
+          <option value="200">1:200</option>
+          <option value="500">1:500</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Capital disponible</div>
+        <div class="form-input-wrap">
+          <input type="number" class="form-input has-suffix" id="capital-input" value="1000" min="100" step="100" oninput="updateCalc()">
+          <span class="input-suffix">$</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Risque par trade</div>
+        <div class="form-input-wrap">
+          <input type="number" class="form-input has-suffix" id="risk-input" value="2" min="0.1" max="100" step="0.1" oninput="updateCalc()">
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Stop Loss (pips)</div>
+        <input type="number" class="form-input" id="sl-input" value="20" min="1" max="500" step="1" oninput="updateCalc()">
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Buy Limit / Sell Limit (optionnel)</div>
+        <div class="form-input-wrap">
+          <input type="number" class="form-input has-suffix" id="limit-input" placeholder="Prix limite..." step="0.01">
+          <span class="input-suffix">$</span>
+        </div>
+      </div>
+
+      <!-- CALCUL AUTO -->
+      <div class="calc-box">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.12em;margin-bottom:10px;">CALCUL AUTOMATIQUE</div>
+        <div class="calc-row"><span class="calc-key">TAILLE LOT</span><span class="calc-val" id="calc-lot">0.0000</span></div>
+        <div class="calc-row"><span class="calc-key">MARGE REQUISE</span><span class="calc-val" id="calc-margin">$0.00</span></div>
+        <div class="calc-row"><span class="calc-key">RISQUE MAXIMUM</span><span class="calc-val" id="calc-risk">$0.00</span></div>
+      </div>
+
+      <button class="btn btn-green w-full" id="btn-open-pos" onclick="openPosition()" style="font-size:14px;font-weight:800;padding:12px;">▲ ACHETER XAU/USD</button>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-align:center;margin-top:8px;">⚠️ MODE SIMULATION — ESSAI GRATUIT 15 JOURS</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">📊 STATS MARCHÉ</div>
+      <div class="stat-row"><span class="stat-key">OUVERTURE</span><span class="stat-val" id="stat-open">—</span></div>
+      <div class="stat-row"><span class="stat-key">HAUT SESSION</span><span class="stat-val" id="stat-high" style="color:var(--green)">—</span></div>
+      <div class="stat-row"><span class="stat-key">BAS SESSION</span><span class="stat-val" id="stat-low" style="color:var(--red)">—</span></div>
+      <div class="stat-row"><span class="stat-key">SPREAD</span><span class="stat-val">0.25 pips</span></div>
+      <div class="stat-row"><span class="stat-key">VOLATILITÉ</span><span class="stat-val" id="stat-vol">—</span></div>
+      <div class="stat-row"><span class="stat-key">TIMEFRAME</span><span class="stat-val" id="stat-tf">M30</span></div>
+    </div>
+
+    <!-- QUICK ANALYSE -->
+    <div class="sidebar-section">
+      <button class="btn btn-outline w-full" id="btn-quick" onclick="runAIAnalysis();switchTab('chart',document.querySelector('.tab-btn'))">🤖 ANALYSE IA RAPIDE</button>
+    </div>
+
+    <!-- TRIAL BANNER -->
+    <div class="trial-banner" id="trial-banner">
+      <div class="trial-title">⏳ ESSAI GRATUIT — 15 JOURS</div>
+      <div class="trial-text">Accédez à toutes les timeframes, signaux illimités et analyse IA avancée avec le plan PRO.</div>
+      <button class="btn btn-gold w-full" onclick="showPlans()">VOIR LES PLANS →</button>
+    </div>
+
+  </aside>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>GOLDTRADER AI v1.0 · XAU/USD · <span id="footer-time"></span></p>
+  <p>⚠️ Les performances passées ne garantissent pas les résultats futurs. Le trading comporte des risques de perte en capital.</p>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG — Remplace par tes clés API en production
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+  // Clé Anthropic — obtiens la sur console.anthropic.com
+  ANTHROPIC_KEY: "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",
+  // Clé TwelveData — obtiens la sur twelvedata.com (gratuit)
+  TWELVEDATA_KEY: "",
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const STATE = {
+  plan: "free",
+  trialDays: 15,
+  buySell: "BUY",
+  timeframe: "M30",
+  currentPrice: 2340.00,
+  openPrice: 2335.50,
+  sessionHigh: 2347.80,
+  sessionLow: 2330.10,
+  change: 4.50,
+  priceHistory: [],
+  positions: [
+    { id: 1, type: "BUY",  entry: 2332.50, sl: 2325.00, tp: 2350.00, lots: 0.01, pnl: 74.50 },
+    { id: 2, type: "SELL", entry: 2348.00, sl: 2355.00, tp: 2330.00, lots: 0.01, pnl: -23.10 },
+  ],
+  aiAdvice: null,
+  aiLoading: false,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ACTUALITÉS MOCK (à remplacer par une API newsapi.org ou similaire)
+// ═══════════════════════════════════════════════════════════════
+const NEWS = [
+  { time: "14:32", source: "Reuters", title: "La Fed maintient ses taux directeurs — l'or bondit de 0.8% en séance", sentiment: "bullish", impact: "HIGH" },
+  { time: "13:55", source: "Bloomberg", title: "Données emploi US décevantes — fuite vers les valeurs refuges", sentiment: "bullish", impact: "HIGH" },
+  { time: "12:10", source: "FX Empire", title: "Résistance technique majeure à 2345$ — risque de retournement baissier", sentiment: "bearish", impact: "MEDIUM" },
+  { time: "11:30", source: "MarketWatch", title: "Dollar Index (DXY) en hausse de 0.3% — pression sur les métaux précieux", sentiment: "bearish", impact: "MEDIUM" },
+  { time: "10:15", source: "Gold Hub", title: "Demande physique asiatique soutient les cours en support", sentiment: "neutral", impact: "LOW" },
+  { time: "09:45", source: "Reuters", title: "Banques centrales mondiales augmentent leurs réserves en or en 2024", sentiment: "bullish", impact: "LOW" },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// GRAPHIQUE — Chart.js
+// ═══════════════════════════════════════════════════════════════
+let chart = null;
+
+function initChart() {
+  // Génère 60 points de données historiques
+  let p = STATE.currentPrice - 8;
+  const now = Date.now();
+  for (let i = 60; i >= 0; i--) {
+    p += (Math.random() - 0.49) * 2.8;
+    STATE.priceHistory.push({
+      t: new Date(now - i * 30000).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+      v: parseFloat(p.toFixed(2)),
+    });
+  }
+  STATE.currentPrice = STATE.priceHistory[STATE.priceHistory.length - 1].v;
+
+  const ctx = document.getElementById("priceChart").getContext("2d");
+
+  // Gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, 280);
+  grad.addColorStop(0, "rgba(212,175,55,0.35)");
+  grad.addColorStop(1, "rgba(212,175,55,0.00)");
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: STATE.priceHistory.map(d => d.t),
+      datasets: [{
+        data: STATE.priceHistory.map(d => d.v),
+        borderColor: "#D4AF37",
+        borderWidth: 2,
+        backgroundColor: grad,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "#D4AF37",
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      interaction: { intersect: false, mode: "index" },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0E1117",
+          borderColor: "#D4AF3755",
+          borderWidth: 1,
+          titleColor: "#5A6278",
+          bodyColor: "#D4AF37",
+          bodyFont: { family: "'IBM Plex Mono', monospace", size: 14, weight: "bold" },
+          titleFont: { family: "'IBM Plex Mono', monospace", size: 10 },
+          callbacks: {
+            label: ctx => `$${ctx.parsed.y.toFixed(2)}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: "#1A203055", drawBorder: false },
+          ticks: { color: "#5A6278", font: { family: "'IBM Plex Mono', monospace", size: 10 }, maxTicksLimit: 8 },
+        },
+        y: {
+          position: "right",
+          grid: { color: "#1A203055", drawBorder: false },
+          ticks: { color: "#5A6278", font: { family: "'IBM Plex Mono', monospace", size: 10 }, callback: v => `$${v.toFixed(0)}` },
+        }
+      }
+    }
+  });
+}
+
+function updateChart(newPrice) {
+  if (!chart) return;
+  const t = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  chart.data.labels.push(t);
+  chart.data.datasets[0].data.push(newPrice);
+  if (chart.data.labels.length > 80) {
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+
+  // Lignes IA si dispo
+  if (STATE.aiAdvice) {
+    // (Chart.js annotations nécessite plugin — on utilise réferences dans la tooltip)
+  }
+
+  chart.update("none");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRIX EN TEMPS RÉEL (mock + optionnel TwelveData)
+// ═══════════════════════════════════════════════════════════════
+async function fetchLivePrice() {
+  try {
+    if (CONFIG.TWELVEDATA_KEY) {
+      const r = await fetch(`https://api.twelvedata.com/price?symbol=XAU/USD&apikey=${CONFIG.TWELVEDATA_KEY}`);
+      const d = await r.json();
+      if (d.price) return parseFloat(d.price);
+    }
+  } catch (_) {}
+
+  // Fallback mock réaliste
+  const delta = (Math.random() - 0.488) * 1.8;
+  return parseFloat((STATE.currentPrice + delta).toFixed(2));
+}
+
+async function tickPrice() {
+  const newPrice = await fetchLivePrice();
+  const prevPrice = STATE.currentPrice;
+  STATE.currentPrice = newPrice;
+  STATE.change = parseFloat((newPrice - STATE.openPrice).toFixed(2));
+
+  // Mise à jour session
+  if (newPrice > STATE.sessionHigh) STATE.sessionHigh = newPrice;
+  if (newPrice < STATE.sessionLow) STATE.sessionLow = newPrice;
+
+  updatePriceDisplay(newPrice, STATE.change, prevPrice);
+  updateChart(newPrice);
+  updateStats();
+  updateCalc();
+  updatePositionsPnL();
+}
+
+function updatePriceDisplay(price, change, prev) {
+  const [intPart, decPart] = price.toFixed(2).split(".");
+  document.getElementById("price-int").textContent = intPart;
+  document.getElementById("price-dec").textContent = decPart;
+
+  const pct = ((change / (price - change)) * 100).toFixed(2);
+  const sign = change >= 0 ? "+" : "";
+  const el = document.getElementById("change-display");
+  el.textContent = `${sign}${change.toFixed(2)} (${sign}${pct}%)`;
+  el.style.color = change >= 0 ? "var(--green)" : "var(--red)";
+
+  // Clignotement
+  const priceEl = document.getElementById("price-display");
+  priceEl.style.color = price > prev ? "var(--green)" : price < prev ? "var(--red)" : "var(--text)";
+  setTimeout(() => priceEl.style.color = "var(--text)", 400);
+}
+
+function updateStats() {
+  document.getElementById("stat-open").textContent = `$${STATE.openPrice.toFixed(2)}`;
+  document.getElementById("stat-high").textContent = `$${STATE.sessionHigh.toFixed(2)}`;
+  document.getElementById("stat-low").textContent = `$${STATE.sessionLow.toFixed(2)}`;
+  const vol = Math.abs(STATE.change);
+  document.getElementById("stat-vol").textContent = vol > 8 ? "🔴 HAUTE" : vol > 3 ? "🟡 MOYENNE" : "🟢 FAIBLE";
+  document.getElementById("stat-tf").textContent = STATE.timeframe;
+  document.getElementById("footer-time").textContent = new Date().toLocaleString("fr-FR");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CALCUL POSITION
+// ═══════════════════════════════════════════════════════════════
+function updateCalc() {
+  const capital  = parseFloat(document.getElementById("capital-input").value) || 1000;
+  const riskPct  = parseFloat(document.getElementById("risk-input").value) || 2;
+  const slPips   = parseFloat(document.getElementById("sl-input").value) || 20;
+  const leverage = parseFloat(document.getElementById("leverage-select").value) || 100;
+  const price    = STATE.currentPrice;
+
+  const riskAmt  = (capital * riskPct) / 100;
+  const pipVal   = price * 0.0001;
+  const lotSize  = parseFloat((riskAmt / (slPips * pipVal * 100000)).toFixed(4));
+  const margin   = parseFloat(((lotSize * 100 * price) / leverage).toFixed(2));
+  const maxLoss  = parseFloat((slPips * pipVal * lotSize * 100000).toFixed(2));
+
+  document.getElementById("calc-lot").textContent    = `${lotSize} lots`;
+  document.getElementById("calc-margin").textContent = `$${margin}`;
+  document.getElementById("calc-risk").textContent   = `$${maxLoss}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUY / SELL
+// ═══════════════════════════════════════════════════════════════
+function setBuySell(type) {
+  STATE.buySell = type;
+  const buyBtn  = document.getElementById("btn-buy");
+  const sellBtn = document.getElementById("btn-sell");
+  const openBtn = document.getElementById("btn-open-pos");
+
+  if (type === "BUY") {
+    buyBtn.className  = "btn btn-active-green w-full";
+    sellBtn.className = "btn btn-inactive w-full";
+    openBtn.className = "btn btn-green w-full";
+    openBtn.textContent = "▲ ACHETER XAU/USD";
+  } else {
+    buyBtn.className  = "btn btn-inactive w-full";
+    sellBtn.className = "btn btn-active-red w-full";
+    openBtn.className = "btn btn-red w-full";
+    openBtn.textContent = "▼ VENDRE XAU/USD";
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POSITIONS
+// ═══════════════════════════════════════════════════════════════
+function openPosition() {
+  const slPips  = parseFloat(document.getElementById("sl-input").value) || 20;
+  const capital = parseFloat(document.getElementById("capital-input").value) || 1000;
+  const riskPct = parseFloat(document.getElementById("risk-input").value) || 2;
+  const lev     = parseFloat(document.getElementById("leverage-select").value) || 100;
+  const price   = STATE.currentPrice;
+  const pipVal  = price * 0.0001;
+  const riskAmt = (capital * riskPct) / 100;
+  const lots    = parseFloat((riskAmt / (slPips * pipVal * 100000)).toFixed(4));
+  const isBuy   = STATE.buySell === "BUY";
+
+  STATE.positions.push({
+    id: Date.now(),
+    type: STATE.buySell,
+    entry: price,
+    sl: isBuy ? parseFloat((price - slPips * 0.1).toFixed(2)) : parseFloat((price + slPips * 0.1).toFixed(2)),
+    tp: isBuy ? parseFloat((price + slPips * 0.2).toFixed(2)) : parseFloat((price - slPips * 0.2).toFixed(2)),
+    lots,
+    pnl: 0,
+  });
+
+  renderPositions();
+  switchTabById("positions");
+
+  // Flash notification
+  showToast(`Position ${STATE.buySell} ouverte à $${price.toFixed(2)}`);
+}
+
+function closePosition(id) {
+  STATE.positions = STATE.positions.filter(p => p.id !== id);
+  renderPositions();
+}
+
+function updatePositionsPnL() {
+  STATE.positions.forEach(pos => {
+    const diff = STATE.currentPrice - pos.entry;
+    const mult = pos.type === "BUY" ? 1 : -1;
+    pos.pnl = parseFloat((diff * mult * pos.lots * 100).toFixed(2));
+  });
+  renderPositions();
+}
+
+function renderPositions() {
+  const list = document.getElementById("positions-list");
+  const count = document.getElementById("pos-count");
+  count.textContent = STATE.positions.length;
+
+  if (STATE.positions.length === 0) {
+    list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px;font-size:14px;">Aucune position ouverte</div>`;
+    document.getElementById("total-pnl-badge").textContent = "P&L TOTAL: $0.00";
+    return;
+  }
+
+  const total = STATE.positions.reduce((a, p) => a + p.pnl, 0);
+  document.getElementById("total-pnl-badge").textContent = `P&L TOTAL: ${total >= 0 ? "+" : ""}$${total.toFixed(2)}`;
+  document.getElementById("total-pnl-badge").className = `badge ${total >= 0 ? "badge-green" : "badge-red"}`;
+
+  list.innerHTML = STATE.positions.map(pos => `
+    <div class="position-card" style="border:1px solid ${pos.pnl >= 0 ? "#00D09C33" : "#FF475733"}">
+      <span class="badge ${pos.type === "BUY" ? "badge-green" : "badge-red"}">${pos.type}</span>
+      <div>
+        <div class="pos-info-main">XAU/USD · ${pos.lots} lot</div>
+        <div class="pos-info-sub">Entry: $${pos.entry.toFixed(2)} · SL: $${pos.sl.toFixed(2)} · TP: $${pos.tp.toFixed(2)}</div>
+      </div>
+      <div>
+        <div class="pos-pnl" style="color:${pos.pnl >= 0 ? "var(--green)" : "var(--red)"}">${pos.pnl >= 0 ? "+" : ""}$${pos.pnl.toFixed(2)}</div>
+        <div class="pos-pnl-label">P&L</div>
+      </div>
+      <button class="btn btn-ghost" onclick="closePosition(${pos.id})" style="padding:5px 10px;font-size:10px;">CLÔTURER</button>
+    </div>
+  `).join("");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTUALITÉS
+// ═══════════════════════════════════════════════════════════════
+function renderNews() {
+  const list = document.getElementById("news-list");
+  list.innerHTML = NEWS.map((n, i) => `
+    <div class="news-card" style="animation-delay:${i * 0.07}s">
+      <div class="news-meta">
+        <div class="news-time">${n.time}</div>
+        <span class="badge ${n.impact === "HIGH" ? "badge-red" : n.impact === "MEDIUM" ? "badge-gold" : "badge-muted"}">${n.impact}</span>
+      </div>
+      <div>
+        <div class="news-source">${n.source}</div>
+        <div class="news-title">${n.title}</div>
+      </div>
+      <span class="badge ${n.sentiment === "bullish" ? "badge-green" : n.sentiment === "bearish" ? "badge-red" : "badge-muted"}">
+        ${n.sentiment === "bullish" ? "▲" : n.sentiment === "bearish" ? "▼" : "●"} ${n.sentiment.toUpperCase()}
+      </span>
+    </div>
+  `).join("");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TIMEFRAMES
+// ═══════════════════════════════════════════════════════════════
+function renderTimeframes() {
+  const bar = document.getElementById("tf-bar");
+  const tfs = ["M1","M5","M15","M30","H1","H4","D1","W1"];
+  bar.innerHTML = tfs.map(tf => `
+    <button class="tf-btn ${tf === STATE.timeframe ? "active" : ""}" onclick="setTimeframe('${tf}')">${tf}</button>
+  `).join("");
+}
+
+function setTimeframe(tf) {
+  STATE.timeframe = tf;
+  document.getElementById("current-tf").textContent = tf;
+  document.getElementById("stat-tf").textContent = tf;
+  renderTimeframes();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYSE IA (Anthropic API)
+// ═══════════════════════════════════════════════════════════════
+async function runAIAnalysis() {
+  if (STATE.aiLoading) return;
+  STATE.aiLoading = true;
+
+  const btn = document.getElementById("btn-analyze");
+  const quick = document.getElementById("btn-quick");
+  const errEl = document.getElementById("ai-error");
+  errEl.style.display = "none";
+
+  btn.innerHTML = `<span class="spinner"></span>ANALYSE EN COURS...`;
+  btn.disabled = true;
+  quick.innerHTML = `<span class="spinner"></span>ANALYSE...`;
+  quick.disabled = true;
+
+  const newsSummary = NEWS.slice(0, 4).map(n => `[${n.sentiment.toUpperCase()}] ${n.title}`).join("\n");
+  const capital  = document.getElementById("capital-input").value;
+  const leverage = document.getElementById("leverage-select").value;
+
+  const prompt = `Tu es un expert trader de l'or (XAU/USD) avec 15 ans d'expérience en analyse technique et fondamentale.
+
+DONNÉES DE MARCHÉ EN TEMPS RÉEL:
+- Prix XAU/USD actuel: $${STATE.currentPrice.toFixed(2)}
+- Variation session: ${STATE.change >= 0 ? "+" : ""}${STATE.change.toFixed(2)}$
+- Plus haut session: $${STATE.sessionHigh.toFixed(2)}
+- Plus bas session: $${STATE.sessionLow.toFixed(2)}
+- Timeframe d'analyse: ${STATE.timeframe}
+- Capital trader: $${capital}
+- Levier utilisé: 1:${leverage}
+
+ACTUALITÉS RÉCENTES (sentiment de marché):
+${newsSummary}
+
+Analyse le contexte et fournis une recommandation de trading précise.
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte, sans balises markdown:
+{
+  "signal": "BUY" ou "SELL" ou "WAIT",
+  "confidence": nombre entre 0 et 100,
+  "entry": prix numérique d'entrée recommandé,
+  "stopLoss": prix numérique du stop loss,
+  "takeProfit1": prix numérique du premier objectif,
+  "takeProfit2": prix numérique du deuxième objectif,
+  "risk": "LOW" ou "MEDIUM" ou "HIGH",
+  "reasoning": "Explication courte de l'analyse en 2-3 phrases",
+  "keyLevels": ["niveau support/résistance 1", "niveau support/résistance 2"]
+}`;
+
+  try {
+    let advice = null;
+
+    if (CONFIG.ANTHROPIC_KEY) {
+      // Appel API Anthropic réel
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      const data = await response.json();
+      const text = (data.content || []).map(b => b.text || "").join("");
+      advice = JSON.parse(text.replace(/```json|```/g, "").trim());
+    } else {
+      // MODE DÉMO — Simule une réponse IA réaliste
+      await new Promise(r => setTimeout(r, 1800)); // Délai réaliste
+      const isBullish = NEWS.filter(n => n.sentiment === "bullish").length > NEWS.filter(n => n.sentiment === "bearish").length;
+      const price = STATE.currentPrice;
+      advice = {
+        signal: isBullish ? "BUY" : STATE.change > 2 ? "WAIT" : "SELL",
+        confidence: Math.floor(Math.random() * 20 + 62),
+        entry: parseFloat(price.toFixed(2)),
+        stopLoss: isBullish ? parseFloat((price - 12).toFixed(2)) : parseFloat((price + 12).toFixed(2)),
+        takeProfit1: isBullish ? parseFloat((price + 18).toFixed(2)) : parseFloat((price - 18).toFixed(2)),
+        takeProfit2: isBullish ? parseFloat((price + 32).toFixed(2)) : parseFloat((price - 32).toFixed(2)),
+        risk: Math.abs(STATE.change) > 5 ? "HIGH" : "MEDIUM",
+        reasoning: isBullish
+          ? `Le sentiment de marché est globalement haussier avec ${NEWS.filter(n=>n.sentiment==="bullish").length} actualités positives. La Fed maintenant ses taux favorise l'or comme valeur refuge. Sur le timeframe ${STATE.timeframe}, un support solide est identifié.`
+          : `Pression vendeuse sur l'or avec un DXY en progression. La résistance technique à $${(price + 5).toFixed(0)} pourrait limiter la hausse. Prudence recommandée dans ce contexte.`,
+        keyLevels: [
+          `Support: $${(price - 15).toFixed(2)}`,
+          `Résistance: $${(price + 8).toFixed(2)}`,
+        ]
+      };
+      // Note démo
+      advice._demo = true;
+    }
+
+    STATE.aiAdvice = advice;
+    renderAIAdvice(advice);
+
+  } catch (err) {
+    errEl.textContent = "❌ Erreur lors de l'analyse. Vérifiez votre connexion ou votre clé API.";
+    errEl.style.display = "block";
+    console.error("AI Error:", err);
+  } finally {
+    STATE.aiLoading = false;
+    btn.innerHTML = "🔄 RELANCER L'ANALYSE";
+    btn.disabled = false;
+    quick.innerHTML = "🤖 ANALYSE IA RAPIDE";
+    quick.disabled = false;
+  }
+}
+
+function renderAIAdvice(a) {
+  const placeholder = document.getElementById("ai-placeholder");
+  const result = document.getElementById("ai-result");
+  placeholder.classList.add("hidden");
+  result.classList.remove("hidden");
+
+  const signalColor = a.signal === "BUY" ? "var(--green)" : a.signal === "SELL" ? "var(--red)" : "var(--gold)";
+  const borderColor = a.signal === "BUY" ? "#00D09C44" : a.signal === "SELL" ? "#FF475744" : "#D4AF3744";
+  const riskColor = a.risk === "LOW" ? "badge-green" : a.risk === "HIGH" ? "badge-red" : "badge-gold";
+
+  result.style.border = `1px solid ${borderColor}`;
+
+  result.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:0.1em;">
+          SIGNAL IA CLAUDE — ${STATE.timeframe} ${a._demo ? "· <span style='color:var(--gold)'>MODE DÉMO</span>" : ""}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:36px;font-weight:900;color:${signalColor}">${a.signal}</span>
+          <span class="badge badge-green">${a.confidence}% CONFIANCE</span>
+          <span class="badge ${riskColor}">RISQUE ${a.risk}</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost" onclick="resetAI()" style="padding:4px 8px;font-size:10px;">✕ RÉINITIALISER</button>
+    </div>
+    <div class="ai-levels">
+      <div class="ai-level">
+        <div class="ai-level-label">PRIX D'ENTRÉE</div>
+        <div class="ai-level-val" style="color:var(--gold)">$${a.entry?.toFixed(2) ?? "—"}</div>
+      </div>
+      <div class="ai-level">
+        <div class="ai-level-label">STOP LOSS</div>
+        <div class="ai-level-val" style="color:var(--red)">$${a.stopLoss?.toFixed(2) ?? "—"}</div>
+      </div>
+      <div class="ai-level">
+        <div class="ai-level-label">TAKE PROFIT 1</div>
+        <div class="ai-level-val" style="color:var(--green)">$${a.takeProfit1?.toFixed(2) ?? "—"}</div>
+      </div>
+      <div class="ai-level">
+        <div class="ai-level-label">TAKE PROFIT 2</div>
+        <div class="ai-level-val" style="color:var(--green)">$${a.takeProfit2?.toFixed(2) ?? "—"}</div>
+      </div>
+    </div>
+    <div class="ai-reasoning">${a.reasoning}</div>
+    ${a.keyLevels?.length ? `
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">NIVEAUX CLÉS :</span>
+        ${a.keyLevels.map(l => `<span class="badge badge-muted">${l}</span>`).join("")}
+      </div>
+    ` : ""}
+    ${a._demo ? `
+      <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);border:1px solid var(--border);">
+        💡 MODE DÉMO — Pour activer l'analyse IA réelle, ajoute ta clé API Anthropic dans CONFIG.ANTHROPIC_KEY
+      </div>
+    ` : ""}
+  `;
+
+  if (a._demo) return;
+
+  // Applique les niveaux sur le formulaire
+  document.getElementById("sl-input").value = Math.abs(a.entry - a.stopLoss).toFixed(0);
+  document.getElementById("limit-input").value = a.entry.toFixed(2);
+  setBuySell(a.signal === "BUY" ? "BUY" : "SELL");
+  updateCalc();
+}
+
+function resetAI() {
+  STATE.aiAdvice = null;
+  document.getElementById("ai-result").classList.add("hidden");
+  document.getElementById("ai-placeholder").classList.remove("hidden");
+  document.getElementById("btn-analyze").innerHTML = "🤖 ANALYSER AVEC L'IA CLAUDE";
+  document.getElementById("btn-analyze").disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════
+function switchTab(id, clickedBtn) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  document.getElementById(`tab-${id}`).classList.add("active");
+  if (clickedBtn) clickedBtn.classList.add("active");
+}
+
+function switchTabById(id) {
+  const btns = document.querySelectorAll(".tab-btn");
+  const map = { chart: 0, positions: 1, news: 2 };
+  switchTab(id, btns[map[id]]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLANS
+// ═══════════════════════════════════════════════════════════════
+function showPlans() {
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("plans-screen").style.display = "block";
+}
+
+function hidePlans() {
+  document.getElementById("plans-screen").style.display = "none";
+  document.getElementById("dashboard").style.display = "grid";
+}
+
+function selectPlan(plan) {
+  STATE.plan = plan;
+  const names = { free: "FREE TRIAL", basic: "BASIC", pro: "PRO" };
+  document.getElementById("plan-badge").textContent = names[plan];
+  document.getElementById("trial-banner").style.display = plan === "free" ? "block" : "none";
+  document.getElementById("trial-badge").style.display = plan === "free" ? "inline-flex" : "none";
+  ["free","basic","pro"].forEach(p => {
+    document.getElementById(`plan-btn-${p}`).textContent = p === plan ? "✓ PLAN ACTUEL" : "CHOISIR";
+  });
+  hidePlans();
+  showToast(`Plan ${names[plan]} activé !`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST NOTIFICATION
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.createElement("div");
+  t.style.cssText = `
+    position:fixed;bottom:80px;right:24px;
+    background:var(--panel);border:1px solid var(--gold)55;
+    border-radius:8px;padding:12px 18px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);
+    z-index:9998;animation:fadeUp 0.3s ease;
+    box-shadow:0 8px 32px #00000066;
+  `;
+  t.textContent = `✓ ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+function init() {
+  initChart();
+  renderTimeframes();
+  renderNews();
+  renderPositions();
+  updateCalc();
+  updateStats();
+
+  // Mise à jour prix toutes les 3 secondes
+  setInterval(tickPrice, 3000);
+
+  // Horloge footer
+  setInterval(() => {
+    document.getElementById("footer-time").textContent = new Date().toLocaleString("fr-FR");
+  }, 1000);
+}
+
+// Lance l'app quand la page est chargée
+window.addEventListener("load", init);
+</script>
+</body>
+</html>
