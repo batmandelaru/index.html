@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetireMaisons - Preview Interactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-blue { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); }
+        .glass-effect { backdrop-filter: blur(10px); }
+        .slide { display: none; animation: fadeIn 0.3s; }
+        .slide.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- NAVBAR -->
+<nav class="bg-white border-b sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-lg">🏥</div>
+            <div>
+                <p class="font-bold text-lg">RetireMaisons</p>
+                <p class="text-xs text-gray-500">SeLoger pour EHPAD</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="showSlide('home')" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Accueil</button>
+            <button onclick="showSlide('search')" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Recherche</button>
+            <button onclick="showSlide('detail')" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Profil</button>
+            <button onclick="showSlide('calculator')" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Calculateur</button>
+            <button onclick="showSlide('dashboard')" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg">Dashboard</button>
+        </div>
+    </div>
+</nav>
+
+<!-- PAGE 1: ACCUEIL -->
+<div id="home" class="slide active">
+    <!-- HERO -->
+    <div class="gradient-blue text-white py-20">
+        <div class="max-w-4xl mx-auto px-4 text-center space-y-8">
+            <h1 class="text-5xl font-bold">Trouvez la maison de retraite idéale</h1>
+            <p class="text-xl text-blue-100">Comparez les établissements, consultez les avis vérifiés et déposez votre dossier en quelques clics.</p>
+
+            <!-- Search Bar -->
+            <div class="flex gap-2 max-w-2xl mx-auto">
+                <input type="text" placeholder="Ville ou code postal" class="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:outline-none">
+                <button class="px-6 py-3 bg-white text-blue-600 rounded-lg font-bold hover:bg-gray-50">🔍 Chercher</button>
+            </div>
+
+            <!-- Quick Filters -->
+            <div class="flex gap-3 justify-center flex-wrap">
+                <button class="px-4 py-2 rounded-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium">💰 Jusqu'à 2500€/mois</button>
+                <button class="px-4 py-2 rounded-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium">🧠 Unité Alzheimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="max-w-4xl mx-auto px-4 py-12 grid md:grid-cols-4 gap-6">
+        <div class="text-center">
+            <p class="text-4xl font-bold text-blue-600">2,847</p>
+            <p class="text-gray-600">Établissements</p>
+        </div>
+        <div class="text-center">
+            <p class="text-4xl font-bold text-green-600">156K</p>
+            <p class="text-gray-600">Familles actives</p>
+        </div>
+        <div class="text-center">
+            <p class="text-4xl font-bold text-orange-600">47K</p>
+            <p class="text-gray-600">Admissions/an</p>
+        </div>
+        <div class="text-center">
+            <p class="text-4xl font-bold text-red-600">4.8/5</p>
+            <p class="text-gray-600">Note moyenne</p>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="bg-white py-16">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Comment ça marche ?</h2>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mb-4">1</div>
+                    <h3 class="font-bold mb-2">Recherchez</h3>
+                    <p class="text-sm text-gray-600">Trouvez l'établissement qui correspond à vos besoins</p>
+                </div>
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mb-4">2</div>
+                    <h3 class="font-bold mb-2">Comparez</h3>
+                    <p class="text-sm text-gray-600">Consultez les tarifs, services et avis</p>
+                </div>
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mb-4">3</div>
+                    <h3 class="font-bold mb-2">Postulez</h3>
+                    <p class="text-sm text-gray-600">Remplissez un dossier simple en quelques minutes</p>
+                </div>
+                <div>
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mb-4">4</div>
+                    <h3 class="font-bold mb-2">Décision</h3>
+                    <p class="text-sm text-gray-600">L'établissement vous contacte très bientôt</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPULAR ESTABLISHMENTS -->
+    <div class="max-w-6xl mx-auto px-4 py-16">
+        <h2 class="text-3xl font-bold mb-8">Établissements populaires</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- Card 1 -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-40 flex items-center justify-center text-white text-6xl">🏛️</div>
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold">Résidence Les Chênes</h3>
+                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Alzheimer</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">📍 Paris • ⭐ 4.8 (124)</p>
+                    <p class="text-2xl font-bold text-blue-600 mb-4">À partir de 2500€</p>
+                    <button class="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Consulter</button>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                <div class="bg-gradient-to-r from-green-400 to-green-600 h-40 flex items-center justify-center text-white text-6xl">🌳</div>
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold">EHPAD Soleil Bleu</h3>
+                        <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">5 places</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">📍 Lyon • ⭐ 4.6 (98)</p>
+                    <p class="text-2xl font-bold text-blue-600 mb-4">À partir de 2000€</p>
+                    <button class="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Consulter</button>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                <div class="bg-gradient-to-r from-purple-400 to-purple-600 h-40 flex items-center justify-center text-white text-6xl">🏖️</div>
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold">Résidence Côté Jardin</h3>
+                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Alzheimer</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">📍 Marseille • ⭐ 4.7 (156)</p>
+                    <p class="text-2xl font-bold text-blue-600 mb-4">À partir de 1800€</p>
+                    <button class="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Consulter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 2: RECHERCHE -->
+<div id="search" class="slide">
+    <div class="bg-white border-b">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold mb-2">Recherche d'établissements</h1>
+            <p class="text-gray-600">18 établissements trouvés</p>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-8 grid lg:grid-cols-4 gap-8">
+        <!-- SIDEBAR FILTRES -->
+        <aside>
+            <div class="bg-white p-6 rounded-lg shadow-sm sticky top-20 space-y-6">
+                <div>
+                    <label class="block text-sm font-bold mb-3">Localisation</label>
+                    <input type="text" placeholder="Ville ou code postal" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold mb-3">Budget mensuel</label>
+                    <input type="range" min="1000" max="4000" value="2500" class="w-full mb-2">
+                    <p class="text-lg font-bold text-blue-600">Jusqu'à 2500€</p>
+                    <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
+                        <button class="py-1 bg-gray-100 rounded hover:bg-blue-600 hover:text-white">1500€</button>
+                        <button class="py-1 bg-blue-600 text-white rounded">2500€</button>
+                        <button class="py-1 bg-gray-100 rounded hover:bg-blue-600 hover:text-white">3500€</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4">
+                        <span class="ml-2 text-sm text-gray-700">Unité Alzheimer</span>
+                    </label>
+                </div>
+
+                <button class="w-full py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg border border-blue-300">Réinitialiser</button>
+            </div>
+        </aside>
+
+        <!-- RÉSULTATS -->
+        <main class="lg:col-span-3">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Result Card -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-48 flex items-center justify-center text-white text-5xl">🏛️</div>
+                    <div class="p-4">
+                        <div class="flex gap-2 mb-2">
+                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">Alzheimer</span>
+                            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">3 places</span>
+                        </div>
+                        <h3 class="font-bold text-lg">Résidence Les Chênes</h3>
+                        <p class="text-sm text-gray-600">📍 Paris • ⭐ 4.8/5 (124 avis)</p>
+                        <p class="text-2xl font-bold text-blue-600 mt-3">2500€ - 3500€/mois</p>
+                        <button class="w-full mt-3 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Voir détails</button>
+                    </div>
+                </div>
+
+                <!-- Result Card -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 h-48 flex items-center justify-center text-white text-5xl">🌳</div>
+                    <div class="p-4">
+                        <div class="flex gap-2 mb-2">
+                            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">5 places</span>
+                        </div>
+                        <h3 class="font-bold text-lg">EHPAD Soleil Bleu</h3>
+                        <p class="text-sm text-gray-600">📍 Lyon • ⭐ 4.6/5 (98 avis)</p>
+                        <p class="text-2xl font-bold text-blue-600 mt-3">2000€ - 3000€/mois</p>
+                        <button class="w-full mt-3 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Voir détails</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- PAGE 3: PROFIL ÉTABLISSEMENT -->
+<div id="detail" class="slide">
+    <!-- GALLERY -->
+    <div class="bg-white">
+        <div class="max-w-6xl mx-auto px-4 py-8">
+            <div class="bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg h-96 flex items-center justify-center text-white text-6xl mb-4">🏛️ Gallery</div>
+            <div class="flex gap-2 overflow-x-auto">
+                <div class="flex-shrink-0 w-20 h-20 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg cursor-pointer hover:ring-2 ring-blue-500"></div>
+                <div class="flex-shrink-0 w-20 h-20 bg-gradient-to-r from-green-400 to-green-600 rounded-lg cursor-pointer hover:ring-2 ring-blue-500"></div>
+                <div class="flex-shrink-0 w-20 h-20 bg-gradient-to-r from-purple-400 to-purple-600 rounded-lg cursor-pointer hover:ring-2 ring-blue-500"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER INFO -->
+    <div class="bg-white border-b sticky top-16 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold">Résidence Les Chênes</h1>
+                    <p class="text-gray-600 flex items-center gap-2 mt-2">📍 42 Avenue des Champs-Élysées, 75001 Paris</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="p-3 rounded-lg bg-gray-100 hover:bg-red-100">❤️</button>
+                    <button class="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">📋 Postuler</button>
+                </div>
+            </div>
+
+            <!-- STATS -->
+            <div class="flex gap-4 mt-4">
+                <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
+                    <span class="text-2xl">⭐</span>
+                    <div>
+                        <p class="font-bold">4.8</p>
+                        <p class="text-sm text-gray-600">124 avis</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-lg">
+                    <span class="text-2xl">🛏️</span>
+                    <div>
+                        <p class="font-bold">3 place(s)</p>
+                        <p class="text-sm text-gray-600">disponible(s)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="bg-white border-b sticky top-32 z-10">
+        <div class="max-w-6xl mx-auto px-4 flex gap-8">
+            <button class="py-4 font-bold border-b-2 border-blue-600 text-blue-600">ℹ️ Informations</button>
+            <button class="py-4 font-bold text-gray-600 hover:text-gray-900">📋 Candidature</button>
+            <button class="py-4 font-bold text-gray-600 hover:text-gray-900">⭐ Avis</button>
+            <button class="py-4 font-bold text-gray-600 hover:text-gray-900">💰 Calculateur</button>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- TARIFS -->
+        <h2 class="text-2xl font-bold mb-4">💰 Tarifs</h2>
+        <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="p-6 bg-blue-50 border-2 border-blue-200 rounded-lg text-center">
+                <p class="text-sm text-gray-600 mb-1">Prix minimum</p>
+                <p class="text-3xl font-bold text-blue-600">2500€</p>
+                <p class="text-sm text-gray-500 mt-2">/mois</p>
+            </div>
+            <div class="p-6 bg-green-50 border-2 border-green-200 rounded-lg text-center">
+                <p class="text-sm text-gray-600 mb-1">Prix moyen</p>
+                <p class="text-3xl font-bold text-green-600">3000€</p>
+                <p class="text-sm text-gray-500 mt-2">/mois</p>
+            </div>
+            <div class="p-6 bg-orange-50 border-2 border-orange-200 rounded-lg text-center">
+                <p class="text-sm text-gray-600 mb-1">Prix maximum</p>
+                <p class="text-3xl font-bold text-orange-600">3500€</p>
+                <p class="text-sm text-gray-500 mt-2">/mois</p>
+            </div>
+        </div>
+
+        <!-- SERVICES -->
+        <h2 class="text-2xl font-bold mb-4">🏥 Services et équipements</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded-lg flex items-center gap-3">
+                <span class="text-2xl">✓</span>
+                <span class="font-medium">Restaurant</span>
+            </div>
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded-lg flex items-center gap-3">
+                <span class="text-2xl">✓</span>
+                <span class="font-medium">Cinéma</span>
+            </div>
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded-lg flex items-center gap-3">
+                <span class="text-2xl">✓</span>
+                <span class="font-medium">Jardin</span>
+            </div>
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded-lg flex items-center gap-3">
+                <span class="text-2xl">✓</span>
+                <span class="font-medium">Unité Alzheimer</span>
+            </div>
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded-lg flex items-center gap-3">
+                <span class="text-2xl">✓</span>
+                <span class="font-medium">Physiothérapie</span>
+            </div>
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded-lg flex items-center gap-3">
+                <span class="text-2xl">✓</span>
+                <span class="font-medium">Infirmiers 24h/24</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 4: CALCULATEUR -->
+<div id="calculator" class="slide">
+    <div class="max-w-4xl mx-auto px-4 py-12">
+        <h1 class="text-3xl font-bold mb-8">🧮 Calculateur de reste à charge</h1>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- INPUTS -->
+            <div class="space-y-6">
+                <!-- Prix chambre -->
+                <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-300">
+                    <label class="block text-sm font-bold mb-2">💰 Prix de la chambre</label>
+                    <input type="range" min="1800" max="3500" value="3000" class="w-full mb-2" onchange="updateCalculator()">
+                    <input type="number" value="3000" class="w-full px-3 py-2 border-2 border-blue-300 rounded-lg font-bold text-center" onchange="updateCalculator()">
+                </div>
+
+                <!-- APA -->
+                <div class="p-5 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                    <label class="text-sm font-bold block mb-2">APA - Allocation Personnalisée d'Autonomie</label>
+                    <input type="range" min="0" max="2000" value="1200" class="w-full mb-3" onchange="updateCalculator()">
+                    <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                        <button class="py-1 bg-white rounded border-2 border-blue-200 hover:bg-blue-200">Autonome<br>(0€)</button>
+                        <button class="py-1 bg-blue-500 text-white rounded">Moyenne<br>(1200€)</button>
+                    </div>
+                    <input type="number" value="1200" class="w-full px-2 py-1 border border-gray-300 rounded text-sm font-bold" onchange="updateCalculator()">
+                </div>
+
+                <!-- APL -->
+                <div class="p-5 bg-green-50 rounded-lg border-l-4 border-green-500">
+                    <label class="text-sm font-bold block mb-2">APL - Aide Personnalisée au Logement</label>
+                    <input type="range" min="0" max="600" value="250" class="w-full mb-3" onchange="updateCalculator()">
+                    <input type="number" value="250" class="w-full px-2 py-1 border border-gray-300 rounded text-sm font-bold" onchange="updateCalculator()">
+                </div>
+            </div>
+
+            <!-- RÉSULTATS -->
+            <div class="space-y-6">
+                <!-- Reste à charge -->
+                <div class="p-8 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border-4 border-red-300 text-center">
+                    <p class="text-sm font-bold text-gray-700 mb-2">RESTE À CHARGE MENSUEL</p>
+                    <p class="text-5xl font-black text-red-600" id="remainingCost">1550€</p>
+                    <p class="text-gray-600 mt-2">Montant à votre charge après aides</p>
+                </div>
+
+                <!-- Barre couverture -->
+                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg">
+                    <p class="text-sm font-bold text-gray-700 mb-4">COUVERTURE PAR LES AIDES</p>
+                    <div class="w-full bg-gray-200 rounded-full h-3 mb-4 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-500 via-green-500 to-orange-500 h-full" style="width: 48%" id="coverageBar"></div>
+                    </div>
+                    <p class="text-lg font-bold text-right" id="coveragePercent">48% couvert</p>
+                </div>
+
+                <!-- Ventilation -->
+                <div class="p-6 bg-white border-2 border-gray-200 rounded-lg">
+                    <p class="text-sm font-bold text-gray-700 mb-4">VENTILATION</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>🔵 APA: 1200€</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>🟢 APL: 250€</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>🔴 Reste: 1550€</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFO BOX -->
+        <div class="mt-8 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+            <h3 class="font-bold text-gray-900 mb-3">📌 À retenir</h3>
+            <ul class="space-y-2 text-sm text-gray-700">
+                <li>✓ Les montants d'APA varient selon votre GIR (Groupe Iso-Ressources)</li>
+                <li>✓ L'APL est versée par la CAF si vous en êtes bénéficiaire</li>
+                <li>✓ Ce calcul est estimatif. Contactez votre département pour confirmation.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 5: DASHBOARD -->
+<div id="dashboard" class="slide">
+    <div class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold mb-2">📊 Candidatures</h1>
+            <p class="text-gray-600">Gérez les dossiers reçus pour votre établissement</p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid md:grid-cols-5 gap-4 mb-8">
+            <div class="bg-blue-50 border-2 border-blue-300 p-4 rounded-lg text-center">
+                <p class="text-gray-600 text-sm font-bold">Total</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">47</p>
+            </div>
+            <div class="bg-yellow-50 border-2 border-yellow-300 p-4 rounded-lg text-center">
+                <p class="text-gray-600 text-sm font-bold">En attente</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">12</p>
+            </div>
+            <div class="bg-purple-50 border-2 border-purple-300 p-4 rounded-lg text-center">
+                <p class="text-gray-600 text-sm font-bold">Visites</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">18</p>
+            </div>
+            <div class="bg-green-50 border-2 border-green-300 p-4 rounded-lg text-center">
+                <p class="text-gray-600 text-sm font-bold">Admis</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">15</p>
+            </div>
+            <div class="bg-red-50 border-2 border-red-300 p-4 rounded-lg text-center">
+                <p class="text-gray-600 text-sm font-bold">Refusés</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">2</p>
+            </div>
+        </div>
+
+        <!-- TABLEAU -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b-2 border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700">Candidat</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700">Âge</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700">Budget</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <p class="font-bold">Jean Dupont</p>
+                                <p class="text-sm text-gray-500">Par: Marie Dupont</p>
+                            </td>
+                            <td class="px-6 py-4">83 ans</td>
+                            <td class="px-6 py-4">
+                                <a href="#" class="text-blue-600 hover:underline">marie@example.com</a>
+                                <p class="text-xs text-gray-500">06 12 34 56 78</p>
+                            </td>
+                            <td class="px-6 py-4 font-bold">2500€/mois</td>
+                            <td class="px-6 py-4">
+                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold">En attente</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex gap-2">
+                                    <button class="p-2 text-blue-600 hover:bg-blue-50 rounded">👁️</button>
+                                    <button class="p-2 text-purple-600 hover:bg-purple-50 rounded">✓ Visite</button>
+                                    <button class="p-2 text-green-600 hover:bg-green-50 rounded font-bold">✅ Admettre</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <p class="font-bold">Simone Martin</p>
+                                <p class="text-sm text-gray-500">Par: Paul Martin</p>
+                            </td>
+                            <td class="px-6 py-4">78 ans</td>
+                            <td class="px-6 py-4">
+                                <a href="#" class="text-blue-600 hover:underline">paul@example.com</a>
+                                <p class="text-xs text-gray-500">06 98 76 54 32</p>
+                            </td>
+                            <td class="px-6 py-4 font-bold">3000€/mois</td>
+                            <td class="px-6 py-4">
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold">✅ Admis</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex gap-2">
+                                    <button class="p-2 text-gray-400 cursor-not-allowed">👁️</button>
+                                    <button class="p-2 text-gray-400 cursor-not-allowed">✓</button>
+                                    <span class="p-2 text-green-600 font-bold">💚 ADMIS</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showSlide(slideId) {
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    document.getElementById(slideId).classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function updateCalculator() {
+    const price = 3000;
+    const apa = 1200;
+    const apl = 250;
+    const remaining = Math.max(0, price - apa - apl);
+    const coverage = ((apa + apl) / price * 100).toFixed(1);
+
+    document.getElementById('remainingCost').textContent = remaining + '€';
+    document.getElementById('coveragePercent').textContent = coverage + '% couvert';
+    document.getElementById('coverageBar').style.width = coverage + '%';
+}
+</script>
+
+</body>
+</html>
